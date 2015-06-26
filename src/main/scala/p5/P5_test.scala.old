@@ -1,0 +1,405 @@
+
+/**
+ * @author tr61
+ */
+object P5_test {
+  
+  object example_parser_2 {
+    import P5_lib.lib._
+    import P5_lib.lib.implicits._
+    
+    val raw_a1 = example_parser.raw_a1
+    val _1 = mktmparser[String,Int](raw_a1)((ss:Substring[String]) => 
+      if (content(ss) == "1") List(1) else throw new Exception("_1"))
+    val raw_eps = example_parser.raw_eps
+    val eps = mktmparser[String,Int](raw_eps)((ss:Substring[String]) => ss match { 
+          case (s,i,j) => if (i==j) List(0) else {println("!"); List()} // this should not be called if the oracle is right
+        })
+    
+    
+    val e2:Parser[String,Int] = {
+      ((e2 ~ e2 ~ e2) ^^  { _ match { case x1 ~ x2 ~ x3 => x1+x2+x3} }) |
+        _1 | // can't see that this is Parser[S,A], to apply implicits
+        eps
+    }
+    
+    def test() = {
+      val s = "1"*10
+      val len = s.length()
+      println(run_parser(s,len,e2))
+    }
+  }
+  
+  object example_parser {
+    
+    import P3_core.code
+    import code._
+    import E3_substring._
+    
+    val raw_a1 = (x:Substring[String]) => x match { case (s,i,j) => if (i < j && s(i)=='1') List(i+1) else List()}
+    val _1 = code.mktmparser(raw_a1)((ss:Substring[String]) => 
+      if (code.sp.content(ss) == "1") List(1) else throw new Exception("_1"))
+    
+    val raw_eps = (x:Substring[String]) => x match { case (s,i,j) => if (i <= j) List(i) else List()}
+    val eps = code.mktmparser(raw_eps)((ss:Substring[String]) => ss match { 
+          case (s,i,j) => if (i==j) List(0) else {println("!"); List()} // this should not be called if the oracle is right
+        })
+    
+    val dummy_parser = _1
+    
+    val e1:Parser[String,Int] = {
+      P5_memo.memo_p(mkntparser(mkntparser_1{
+        val x = seq(rhs(e1),e1)
+        val x4 = seq(x,e1)
+        
+        val x3 = set_act_rhs(x4,(x:((Int,Int),Int)) => x._1._1+x._1._2+x._2)
+        val x2 = alts(List(x3,rhs(_1),rhs(eps)))
+        x2
+        
+        //^^(seq(rhs(e),e))( (x) => 1)
+      }))
+      
+      //val x2 = mk_nt_parser_1
+      //val y = ^^(x)( (x) => 1) 
+    }
+    
+    
+    case class ~[+a, +b](_1: a, _2: b) {
+      override def toString = "("+ _1 +"~"+ _2 +")"
+    }
+    
+    def seq2[S,A,B](r:Rhs[S,A],p:Parser[S,B]): Rhs[S,~[A,B]] = {
+      val r2 = seq(r,p)
+      val r3 = set_act_rhs(r2,(x:(A,B)) => new ~(x._1,x._2))
+      r3
+    }
+    
+    implicit class RichRhs[S,A](val r:Rhs[S,A]) extends AnyVal {
+      def ~ [B](q:Parser[S,B]):Rhs[S,~[A,B]] = {
+        seq2(r,q)
+      }
+      
+      def | (q:Rhs[S,A]) : List[Rhs[S,A]] = {
+        r::List(q)
+      } 
+      
+      def ^^ [B](f:A => B): Rhs[S,B] = {
+        set_act_rhs(r,f)
+      }
+    }
+
+    implicit class RichListRhs[S,A](val r:List[Rhs[S,A]]) extends AnyVal {
+      def | (q:Rhs[S,A]) : List[Rhs[S,A]] = {
+        r :+ q
+      }
+    }
+    
+    implicit def parser2rhs[S,A](p:Parser[S,A]) = rhs(p)
+    
+    implicit def parser2richrhs[S,A](p:Parser[S,A]) = RichRhs(rhs(p))
+    
+    implicit def mk_alts[S,A](xs:List[Rhs[S,A]]) = alts(xs)
+    
+    val e2:Parser[String,Int] = {
+      P5_memo.memo_p(mkntparser(mkntparser_1{
+        //val x4 = e2 ~ e2 ~ e2
+        
+        //val x3 = set_act_rhs(x4,(x: Int ~ Int ~ Int) => x match { case x1 ~ x2 ~ x3 => x1+x2+x3})
+        //val x2 = alts(List[Rhs[String,Int]](x3,_1,rhs(eps))) // NB explicit type info
+        
+        /*
+        val x5 = (e2 ~ e2 ~ e2) ^^  { _ match { case x1 ~ x2 ~ x3 => x1+x2+x3} }
+        //val x6 = alts(List[Rhs[String,Int]](x5,_1,rhs(eps))) // really want these types inferred
+        val x7 = x5 | _1 | eps // FIXME ideally want left assoc? no, want implicit on richlistrhs
+        x7
+        * 
+        */
+        ((e2 ~ e2 ~ e2) ^^  { _ match { case x1 ~ x2 ~ x3 => x1+x2+x3} }) |
+        _1 |
+        eps
+        
+        //^^(seq(rhs(e),e))( (x) => 1)
+      }))
+      
+      //val x2 = mk_nt_parser_1
+      //val y = ^^(x)( (x) => 1) 
+    }
+    
+    
+    def from_to(i:Int,j:Int):List[Int] = {
+      i.to(j).toList
+    }
+  }
+  
+  
+    
+  
+  def test_p3_e3_ds() = {
+    import P5_e3_ds.Fix_e3_core
+    val s = "1"*100
+    val p = P5_test.example_parser.e1
+    val e3_core = new Fix_e3_core(s) // s is dummy arg to make parametric types work out
+    def do_work() = {
+      println(e3_core.run_parser(s, s.length,p))
+    }
+    
+    //println(instantiate.impl_e3_core.earley(sops))
+    val num_loops = 5
+    
+    def time[R](block: => R): R = {
+      val t0 = System.nanoTime()
+      val result = block    // call-by-name
+      val t1 = System.nanoTime()
+      val diff = t1 - t0
+      val in_secs = diff / 1000000000.0
+      val avg = in_secs / num_loops
+      println(s"Elapsed time: $diff ns ($in_secs secs) (avg: $avg)")
+      result
+    }
+    time {
+      for(i<-1 to num_loops) {
+        do_work()
+      }
+    }
+
+  }
+ 
+  object test_94 {
+    
+    import P3_core.code
+    import code._
+    import example_parser._
+    
+    
+    def main = {
+      println("test_94: "+e1.spl)
+      println("test_92 2: "+((e1.spl) match { case NP(np) => np.np_rhss() } ))
+      
+      // try to run the oracle
+      val o :ty_oracle[String] = (xs:Ty_rhs_syms_list[String],ys:Sym_plus[String]) 
+      => (i:Int,j:Int) => from_to(i+1,j-1)
+      val tmo = (xs:Tm_plus[String]) => (i:Int,j:Int) => if (j==i+1) true else false 
+      val x = run_parser_1(e1,"111",3,(o,tmo))
+      println("x is"+x)
+    }
+    
+  }
+  
+    
+  /*
+  object test_188 {
+    val span = new Default_span
+    val s0 = span.SS("tom",0,1)
+    val s1 = span.SS("tom",1,2)
+    val s2 = span.SS("tom",2,3)
+    print(span.content(s1))
+    print(span.concatenate_list(List(s0,s1,s2)))
+    print(span.concatenate_list(List(s1,s1,s2)))
+    //val r = concatenate_list("")
+    
+    val c = new code {
+      val gg = Default_gensym
+      val bb = new Default_box(gensym=gg)
+      val sp = new Default_span
+    }
+    
+    
+    // for infix
+    implicit class Parser_wrapper[S,A](p: => c.Parser[S,A]) {
+      def ~ [B](q: => c.Parser[S,B]) = {
+        c.seq(this.p)(q)
+      }
+      def ^^ [B](f: => A => B) = {
+        c.^^(this.p)(f)
+      }
+    }
+    
+    import c._
+    
+    val raw_a1 = (x:c.sp.t[String]) => c.sp.dest_SS(x) match { case (s,i,j) => if (i < j && s(i)=='1') List(i+1) else List()}
+    val _1 = c.mktmparser(raw_a1, (ss:c.sp.t[String]) => if (c.sp.content(ss) == "1") List(1) else List())
+    val dummy_parser = _1
+    
+    val e:Parser[String,Int] = ^^(seq(e)(e))( (x) => 1)
+    val e2:Parser[String,Int] = (e2 ~ e2) ^^ ( (x) => 1)
+    
+    def main = {
+      println("test_188: "+e.spl)
+      println("test_188: "+((e.spl) match { case NP(np) => np.np_rhss() } ))
+      println("test_188 3: "+e2.spl)
+      println("test_188 4: "+((e2.spl) match { case NP(np) => np.np_rhss() } ))
+    }
+    
+  }
+  * 
+  */
+  
+  def main(args: Array[String]) {
+    example_parser_2.test()
+    //test_94.main
+    //this.test_p3_e3_ds()
+    //test_188.main
+    
+    
+    /*
+     val span = new Default_span
+     val s0 = span.SS("tom",0,1)
+     val s1 = span.SS("tom",1,2)
+     val s2 = span.SS("tom",2,3)
+     print(span.content(s1))
+     print(span.concatenate_list(List(s0,s1,s2)))
+     print(span.concatenate_list(List(s1,s1,s2)))
+     //val r = concatenate_list("")
+     
+     val c = new code {
+     val gg = Default_gensym
+     val bb = new Default_box(gensym=gg)
+     val sp = new Default_span
+     }
+     
+     val raw_a1 = (x:c.sp.t[String]) => c.sp.dest_SS(x) match { case (s,i,j) => if (i < j && s(i)=='1') List(i+1) else List()}
+     val _1 = c.mktmparser(raw_a1, (ss:c.sp.t[String]) => if (c.sp.content(ss) == "1") List(1) else List())
+     val dummy_parser = _1
+     
+     /*
+     val f: Unit => Int = {
+     lazy val x = f(())
+     (z:Unit) => x
+     }
+     * 
+     */
+     
+     //val tmp:() => List[Int] = () => { 1::(tmp()) }
+     
+     def p:c.Parser[String,Int] = {
+     c.mkntparser( ((p ~ p) ^^ ((xy:(Int,Int)) => 1))) // do we want call by name, with laziness? call by value is wrong here 
+     }
+     //val x = p.spl
+     //print("hello "+x)
+     
+     // some code using call by name and lazy, in the style of scala parser combinators
+     
+     println()
+     
+     def f(x: => Int) = {
+     println("start")
+     println(x)
+     println(x)
+     println("end")
+     }
+     
+     f({println("x");1})
+     
+     def g(x: => Int) = {
+     println("start")
+     lazy val y = x
+     println(y)
+     println(y)
+     println("end")
+     }
+     
+     g({println("x");1})
+     g({println("x");1})
+     
+     def h(x: => Int) = {
+     println("start")
+     lazy val y = x
+     //println(y)
+     //println(y)
+     println("end")
+     }
+     
+     h({println("x");1})
+     h({println("x");1})
+     
+     
+     
+     
+     class G {
+     var g : Option[G] = None
+     }
+     
+     val x = new G
+     x.g=Some(x)
+     
+     
+     
+     
+     // type t = (Int, () => t) // illegal cyclic reference
+     
+     // val x2 = new scala.collection.immutable.Map[Int,Int]() {} // default map is hashmap https://github.com/scala/scala/blob/2.11.x/src/library/scala/collection/immutable/Map.scala
+     
+     class X extends scala.collection.immutable.HashMap[Int,X] 
+     val x2 = new X()
+     //x2(3)(4)(5) // can pass in arbitrary arguments
+     val x3 = x2 + (1 -> x2)
+     //x3(1)(0)
+     
+     
+     
+     class X3 {
+     val x = 2
+     def map(f:Int => Int):List[Int] = {
+     List(f(x),f(x))
+     }
+     }
+     
+     val x4 = new X3()
+     val x5 = for (i <- x4) yield i
+     println("x5: "+x5)
+     
+     
+     
+     
+     def lazy_pair(f1: => ()=>Int,f2: => ()=> Int) = {
+     lazy val f12 = (f1,f2)
+     f12
+     }
+     
+     def f2():Int = {
+     val x = lazy_pair(f2,f2)
+     1
+     }
+     
+     
+
+     
+     
+     class X2 {
+     val x:Int = c.gg.gen_int()
+     def f() :Option[List[Int]] = None
+     def seq(q: => X2) = {
+     lazy val q2 = Some(List(this.x,q.x))
+     new X2 {
+     override def f() = {
+     q2
+     }
+     }
+     }
+     }
+     
+     def x6:X2 = new X2().seq(x6)
+     println("x6:"+x6.f())
+     println("x6:"+x6.f())
+     
+     // object ~ { val x=5}
+     
+     
+
+     
+     abstract class X4 {
+     val x:Int = c.gg.gen_int()
+     val f:() =>List[Int]
+     }
+     
+     class Myseq(z: => X4,y: => X4) extends X4 {
+     val f = () => List(z.x,y.x)
+     }
+     
+     //val e:Myseq = new Myseq(e,e)
+     
+     
+     */  
+  }
+  
+}
