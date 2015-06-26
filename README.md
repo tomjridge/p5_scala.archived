@@ -1,6 +1,6 @@
 # `p5_scala`
 
-This is an implementation of a P3-like <www.tom-ridge.com/parsing>
+This is an implementation of a P3-like http://www.tom-ridge.com/parsing
 library for parsing, in Scala.
 
 ## Features
