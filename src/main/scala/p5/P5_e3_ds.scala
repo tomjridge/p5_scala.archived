@@ -21,6 +21,8 @@ object P5_e3_ds {
       type nt_item = (nt,sym_list/* reversed! */,sym_list,Int,Int)
       type item = Item
       
+      def nt_item_to_string(x:nt_item) = { "FIXME" }
+      
       val sym_case = (x:sym) => x match {
         case NP(np) => NT(np)
         case TP(tp) => TM(tp)

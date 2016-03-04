@@ -95,8 +95,10 @@ complete5 = $complete5)
     import ctxt.maps._
     //import ctxt.{ops5 => ops}
     val (s00,itm0) = pop_todo(s0)
+    
       (ops5.dest_item(itm0)) match {
       case (ops5.NTITM(nitm)) => {
+      	//println(ctxt.ops5.nt_item_to_string(nitm))
         val complete = ops5.b2_nil(nitm)
         complete match {
           case true => {

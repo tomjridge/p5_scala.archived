@@ -18,6 +18,20 @@ object E3_simple_impl {
       type sym_item = (sym,Int,Int)
       type sym_list = List[sym]
       type nt_item = (nt,sym_list,sym_list,Int,Int)
+      
+    def is_NT(x:sym) = (x % 2 == 0)  
+    def sym_to_string(x:sym) = {
+			if (is_NT(x)) s"NT $x" else s"TM $x"
+		}
+		def sym_list_to_string(x:List[sym]) = {
+			x.map(sym_to_string _).mkString("[", ",", "]")
+		}
+
+		
+		  def nt_item_to_string(x:nt_item) : String = {
+      	s"""(${x._1} ${x._4} ${sym_list_to_string(x._2)} ${x._5} ${sym_list_to_string(x._3)})"""
+      }
+      
       type item = Item
       val sym_case = (s:sym) => (if (s % 2 == 0) (NT(s)) else (TM(s))):Sym
       val sym_of_tm = (s:tm) => s

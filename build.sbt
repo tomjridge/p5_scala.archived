@@ -7,6 +7,7 @@ lazy val root = (project in file(".")).
     //scalaVersion := "2.11.6",
     //autoCompilerPlugins := true,
 
-    mainClass in Compile := Some("p5.examples.P5_modular_parsing_example")
+    //mainClass in Compile := Some("p5.examples.P5_modular_parsing_example")
+    mainClass in Compile := Some("e4.impl.Impl")
 
   )

@@ -10,6 +10,7 @@ object E3_core_types { // we define as a trait so we can have declared but undef
       type tm
       type sym
       type nt_item  
+      def nt_item_to_string(x:nt_item): String
       type tm_item
       type sym_item
       type sym_list
