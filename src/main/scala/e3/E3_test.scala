@@ -9,8 +9,8 @@ object E3_test {
     val eps = 1
     val _1 = 3
     
-    val s = "1"*10
-    val num_loops = 1
+    val s = "1"*100
+    val num_loops = 5
     
     import E3_simple_impl.e3_core_impl
       
