@@ -1,20 +1,16 @@
 // with Ints for NT and TM (even / odd)
-package e4.core
+package e4
 
-import scala.collection.immutable.Map
-import scala.collection.immutable.Set
-
-import e4.core.Core_types._
 //import e4.core.Core._
 
-object Main {
+object Test {
   
   def main(args: Array[String]) {
 
     import p5.examples.Timing
 
     
-    val core = new Core()
+    val core = new Core() { val at0 = Impl.at1 }
     def do_work = {
       println("Start")
       val r = core.fg_earley(core.at0.e)

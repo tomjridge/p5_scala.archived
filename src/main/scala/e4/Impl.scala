@@ -1,4 +1,4 @@
-package e4.core
+package e4
 
 import Core_types._
 
@@ -200,7 +200,7 @@ object Impl {
 
   }
 
-  // encode grammar etc
+  // encode grammar etc; FIXME not here
   class At1 extends At0 {
 
     val eps = 1

@@ -1,4 +1,4 @@
-package e4.core
+package e4
 
 object Core_log {
   

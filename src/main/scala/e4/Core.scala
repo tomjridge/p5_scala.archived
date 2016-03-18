@@ -1,13 +1,12 @@
-package e4.core
+package e4
 
 import Core_types._
 import Core_log._
 
-//abstract 
-class Core {
+abstract class Core {
   
-  val at0 // : All_traits 
-    = Impl.at1
+  val at0 : All_traits 
+    // = Impl.at1
   import at0._
   
   //val c0: Ctxt
